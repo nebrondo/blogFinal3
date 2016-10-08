@@ -2,14 +2,17 @@
 
 <html>
   <head>
-    <title>Unit 2 Rot 13</title>
+    <title>Unit 4 - Homework</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css">
   </head>
 
   <body>
-    <h2>Enter some text to ROT13:</h2>
+    <h2>User Registration:</h2>
     <form method="post">
-      <textarea name="text"
-                style="height: 100px; width: 400px;">{{ textarea }}</textarea>
+      <label for="username">Username:</label><input type="text" name="username" value="{{user}}"><label class="error">{{userWarning}}</label>
+      <label for="password">Password:</label><input type="password" name="password"><label class="error">{{passWarning}}</label>
+      <label for="verify">Verify Password:</label><input type="password" name="verify"><label class="error">{{c_passWarning}}</label>
+      <label for="email">Email:</label><input type="text" name="email" value="{{email}}">
       <br>
       <input type="submit">
     </form>
