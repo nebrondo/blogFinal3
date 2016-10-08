@@ -67,14 +67,14 @@ class MainHandler(TemplateHandler):
         if userWarning or passWarning or c_passWarning:
             self.render("index.html",user=user,email=email,userWarning=userWarning,passWarning=passWarning,c_passWarning=c_passWarning)
         else:
-            userCookie = ("username=%s; Path=/welcome" % user).encode('ascii','ignore')
+            userCookie = ("user_id=%s; Path=/welcome" % user).encode('ascii','ignore')
             self.response.headers.add_header("Set-Cookie", userCookie)
 
             self.redirect("/welcome")
         #self.redirect("/rot13")
 class WelcomeHandler(TemplateHandler):
     def get(self):
-        username=self.request.cookies.get("username")
+        username=self.request.cookies.get("user_id")
         self.render("welcome.html",username=username)
 
 app = webapp2.WSGIApplication([
