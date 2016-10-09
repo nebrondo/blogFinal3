@@ -23,13 +23,6 @@ template_dir = os.path.join(os.path.dirname(__file__),"templates")
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                 autoescape = True)
 
-form = """
-    <h1>Enter some text to ROT13:</h1>
-    <form method="post" action="/rot13">
-        <textarea style="height: 100px; width: 400px;" name="text"></textarea>
-        <input type="submit">
-    </form>
-"""
 class TemplateHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -38,11 +31,12 @@ class TemplateHandler(webapp2.RequestHandler):
         return t.render(params)
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
-
 class MainHandler(TemplateHandler):
+
+class SignupHandler(TemplateHandler):
     def get(self):
         #self.response.headers['Content-Type'] = 'text/plain'
-        self.render("index.html")
+        self.render("signup.html")
         #self.response.out.write(form)
     def post(self):
         user = self.request.get("username")
@@ -65,7 +59,7 @@ class MainHandler(TemplateHandler):
             emailWarning = "Invalid email"
 
         if userWarning or passWarning or c_passWarning:
-            self.render("index.html",user=user,email=email,userWarning=userWarning,passWarning=passWarning,c_passWarning=c_passWarning)
+            self.render("signup.html",user=user,email=email,userWarning=userWarning,passWarning=passWarning,c_passWarning=c_passWarning)
         else:
             userCookie = ("user_id_w=%s; Path=/welcome" % user).encode('ascii','ignore')
             self.response.headers.add_header("Set-Cookie", userCookie)
@@ -76,6 +70,9 @@ class MainHandler(TemplateHandler):
 
             self.redirect("/login")
         #self.redirect("/rot13")
+class NewPostHandler(TemplateHandler):
+
+
 class WelcomeHandler(TemplateHandler):
     def get(self):
         username=self.request.cookies.get("user_id_w")
@@ -109,7 +106,7 @@ class LogoutHandler(TemplateHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
-    ('/signup',MainHandler),
+    ('/signup',SignupHandler),
     ('/welcome',WelcomeHandler),
     ('/login',LoginHandler),
     ('/logout',LogoutHandler)
