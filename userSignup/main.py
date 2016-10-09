@@ -67,18 +67,43 @@ class MainHandler(TemplateHandler):
         if userWarning or passWarning or c_passWarning:
             self.render("index.html",user=user,email=email,userWarning=userWarning,passWarning=passWarning,c_passWarning=c_passWarning)
         else:
-            userCookie = ("user_id=%s; Path=/welcome" % user).encode('ascii','ignore')
+            userCookie = ("user_id_w=%s; Path=/welcome" % user).encode('ascii','ignore')
+            self.response.headers.add_header("Set-Cookie", userCookie)
+            userCookie = ("user_id_l=%s; Path=/login" % user).encode('ascii','ignore')
+            self.response.headers.add_header("Set-Cookie", userCookie)
+            userCookie = ("pass=%s; Path=/login" % pwd).encode('ascii','ignore')
             self.response.headers.add_header("Set-Cookie", userCookie)
 
-            self.redirect("/welcome")
+            self.redirect("/login")
         #self.redirect("/rot13")
 class WelcomeHandler(TemplateHandler):
     def get(self):
-        username=self.request.cookies.get("user_id")
+        username=self.request.cookies.get("user_id_w")
         self.render("welcome.html",username=username)
+
+class LoginHandler(TemplateHandler):
+    def get(self):
+        user_id_l=self.request.cookies.get("user_id_l")
+        self.render("login.html",username=user_id_l)
+    def post(self):
+        user_id_l=self.request.cookies.get("user_id_l")
+        pass_c=self.request.cookies.get("pass")
+        user = self.request.get("username")
+        pwd = self.request.get("password")
+        if not user:
+            userWarning = "Empty username"
+        if not pwd:
+            passWarning = "Empty password"
+        if user and pwd:
+            if user == user_id_l and pwd == pass_c:
+                userCookie = ("user_id_w=%s; Path=/welcome" % user).encode('ascii','ignore')
+                self.response.headers.add_header("Set-Cookie", userCookie)
+                self.redirect("/welcome")
+
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/signup',MainHandler),
-    ('/welcome',WelcomeHandler)
+    ('/welcome',WelcomeHandler),
+    ('/login',LoginHandler)
 ], debug=True)
