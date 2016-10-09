@@ -26,6 +26,7 @@ import re
 from google.appengine.ext import db
 
 from app_utils import Ut
+from user import User
 
 template_dir = os.path.join(os.path.dirname(__file__),"templates")
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -65,43 +66,8 @@ class TemplateHandler(webapp2.RequestHandler):
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
+        #u = User()
         self.user = uid and User.by_id(int(uid))
-
-# Block to hash user information
-
-def users_key(group = 'default'):
-    return db.Key.from_path('users', group)
-
-class User(db.Model):
-    name = db.StringProperty(required = True)
-    pw_hash = db.StringProperty(required = True)
-    email = db.StringProperty()
-
-    @classmethod
-    def by_id(cls, uid):
-        return User.get_by_id(uid, parent = users_key())
-
-    @classmethod
-    def by_name(cls, name):
-        u = User.all().filter('name =', name).get()
-        return u
-
-    @classmethod
-    def register(cls, name, pw, email = None):
-        pw_hash = ut.make_pw_hash(name, pw)
-        return User(parent = users_key(),
-                    name = name,
-                    pw_hash = pw_hash,
-                    email = email)
-
-    @classmethod
-    def login(cls, name, pw):
-        ut = Ut();
-        u = cls.by_name(name)
-        if u and ut.valid_pw(name, pw, u.pw_hash):
-            return u
-
-#END Block to hash user information
 
 
 def blog_key(name = 'default'):
