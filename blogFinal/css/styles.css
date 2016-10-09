@@ -9,6 +9,16 @@ body {
     color: #333;
 }
 
+a {
+    margin: 10px;
+}
+
+.navbar {
+    position: relative;
+    margin: 5px;
+    font-weight: bold;
+}
+
 .login-area {
     font-size: 13px;
     color: gray;

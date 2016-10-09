@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link type="text/css" rel="stylesheet" href="/static/main.css" />
+  <link type="text/css" rel="stylesheet" href="/css/styles.css" />
 
-  <title>CS 253 Blog</title>
+  <title>Blog - Final Project 3</title>
 </head>
 
 <body>
-  <a href="/blog" class="main-title">
-    CS 253 Blog
-  </a>
+    <div class="navbar"><a href="/">Home</a><a href="/newpost">New Post</a><a href="/login">Login</a></div>
+    <a href="/" class="main-title">
+    Blog - Final Project 3
+    </a>
 
-  <div id="content">
-  {% block content %}
-  {% endblock %}
-  </div>
+    <div id="content">
+    {% block content %}
+    {% endblock %}
+    </div>
 </body>
 
 </html>

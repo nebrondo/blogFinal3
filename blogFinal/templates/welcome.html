@@ -1,13 +1,5 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
-  <head>Welcome</title>
-    <link rel="stylesheet" type="text/css" href="css/styles.css">
-  </head>
-
-  <body>
+{% block content %}
     <h2>Welcome, {{username}}!</h2>
-
-  </body>
-
-</html>
+{% endblock %}
