@@ -99,11 +99,18 @@ class LoginHandler(TemplateHandler):
                 userCookie = ("user_id_w=%s; Path=/welcome" % user).encode('ascii','ignore')
                 self.response.headers.add_header("Set-Cookie", userCookie)
                 self.redirect("/welcome")
-
+class LogoutHandler(TemplateHandler):
+    def get(self):
+        userCookie = ("user_id_w=%s; Path=/welcome" % None).encode('ascii','ignore')
+        self.response.headers.add_header("Set-Cookie", userCookie)
+        userCookie = ("user_id_l=%s; Path=/login" % None).encode('ascii','ignore')
+        self.response.headers.add_header("Set-Cookie", userCookie)
+        self.redirect("/signup")
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/signup',MainHandler),
     ('/welcome',WelcomeHandler),
-    ('/login',LoginHandler)
+    ('/login',LoginHandler),
+    ('/logout',LogoutHandler)
 ], debug=True)
