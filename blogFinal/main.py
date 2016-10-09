@@ -17,11 +17,6 @@
 import os
 import webapp2
 import jinja2
-import random
-import hashlib
-import hmac
-from string import letters
-import re
 
 from google.appengine.ext import db
 
@@ -78,10 +73,12 @@ class Post(db.Model):
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
-
+    user = db.TextProperty(required = True)
+    likes = db.IntegerProperty(required = True)
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
+
 
 class MainHandler(TemplateHandler):
     def render_front(self):
@@ -187,7 +184,11 @@ class NewPostHandler(TemplateHandler):
             error = "we need both a subject and content"
             self.render_newpost(subject,content,error)
 
+    # ('/editpost',EditPostHandler),
 
+    # ('/deletepost',DeletePostHandler),
+    # ('/likepost',LikePostHandler),
+    # ('/commentpost',CommentPostHandler),
 class WelcomeHandler(TemplateHandler):
     def get(self):
         username=self.request.cookies.get("user_id_w")
@@ -218,10 +219,14 @@ class LogoutHandler(TemplateHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
+    ('/blog/([0-9]+)', PostPage),
     ('/signup',Register),
-    ('/welcome',WelcomeHandler),
     ('/login',LoginHandler),
-    ('/logout',LogoutHandler),
+    ('/welcome',WelcomeHandler),
     ('/newpost',NewPostHandler),
-    ('/blog/([0-9]+)', PostPage)
+    ('/editpost',EditPostHandler),
+    ('/deletepost',DeletePostHandler),
+    ('/likepost',LikePostHandler),
+    ('/commentpost',CommentPostHandler),
+    ('/logout',LogoutHandler)
 ], debug=True)
