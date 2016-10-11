@@ -73,12 +73,24 @@ class Post(db.Model):
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
-    user = db.TextProperty(required = True)
-    likes = db.IntegerProperty(required = True)
+    user = db.TextProperty(required = False)
+    likes = db.IntegerProperty(required = False)
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
+    #def add(self):
 
+class Comment(db.Model):
+    subject = db.StringProperty(required = True)
+    content = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    last_modified = db.DateTimeProperty(auto_now = True)
+    user = db.TextProperty(required = False)
+    likes = db.IntegerProperty(required = False)
+    def render(self):
+        self._render_text = self.content.replace('\n', '<br>')
+        return render_str("comment.html", p = self)
+    #def add(self):
 
 class MainHandler(TemplateHandler):
     def render_front(self):
@@ -91,17 +103,6 @@ class MainHandler(TemplateHandler):
         #textarea = self.request.get("text")
         self.render_front()
         #self.response.out.write(form)
-
-class PostPage(TemplateHandler):
-    def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
-
-        if not post:
-            self.error(404)
-            return
-
-        self.render("permalink.html", post = post)
 
 class SignupHandler(TemplateHandler):
     def get(self):
@@ -186,9 +187,66 @@ class NewPostHandler(TemplateHandler):
 
     # ('/editpost',EditPostHandler),
 
+class PostPage(TemplateHandler):
+    def get(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+
+        if not post:
+            self.error(404)
+            return
+
+        self.render("permalink.html", post = post)
+
+class EditPostHandler(TemplateHandler):
+    def get(self,post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        if not post:
+            self.error(404)
+            return
+        self.render("editpost.html", post = post)
+    def post(self,post_id):
+        subject = self.request.get("subject")
+        content = self.request.get("content")
+        if content and subject:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+            post.subject = subject
+            post.content = content
+            post.put()
+            #b.get_by_id()
+            self.redirect('/blog/%s' % str(post.key().id()))
+        else:
+            error = "we need both a subject and content"
+            self.render_newpost(subject,content,error)
     # ('/deletepost',DeletePostHandler),
+class DeletePostHandler(TemplateHandler):
+    def get(self,post_id):
+        return False
+    def post():
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        key.delete()
+        self.redirect('/')
     # ('/likepost',LikePostHandler),
+class LikePostHandler(TemplateHandler):
+    def get(self,post_id):
+        return False
+    def post():
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        post.likes+= 1
+        post.put()
+        self.redirect('/blogs/%s' % post_id)
     # ('/commentpost',CommentPostHandler),
+class CommentPostHandler(TemplateHandler):
+    def get(self,post_id):
+        return False
+    def post():
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        key.delete()
+        self.redirect('/')
+
 class WelcomeHandler(TemplateHandler):
     def get(self):
         username=self.request.cookies.get("user_id_w")
@@ -224,9 +282,9 @@ app = webapp2.WSGIApplication([
     ('/login',LoginHandler),
     ('/welcome',WelcomeHandler),
     ('/newpost',NewPostHandler),
-    ('/editpost',EditPostHandler),
-    ('/deletepost',DeletePostHandler),
-    ('/likepost',LikePostHandler),
-    ('/commentpost',CommentPostHandler),
+    ('/editpost/([0-9]+)',EditPostHandler),
+    ('/deletepost/([0-9]+)',DeletePostHandler),
+    ('/like/([0-9]+)',LikePostHandler),
+    ('/commentpost/([0-9]+)',CommentPostHandler),
     ('/logout',LogoutHandler)
 ], debug=True)
