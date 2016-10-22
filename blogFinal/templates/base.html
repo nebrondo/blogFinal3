@@ -7,7 +7,13 @@
 </head>
 
 <body>
-    <div class="navbar"><a href="/">Home</a><a href="/newpost">New Post</a><a href="/login">Login</a></div>
+    <div class="navbar"><a href="/">Home</a><a href="/newpost">New Post</a>
+
+    {% if loggedIn %}
+        <a href="/logout">Log Out</a></div>
+    {% else %}
+        <a href="/login">Log In</a></div>
+    {% endif %}
     <a href="/" class="main-title">
     Blog - Final Project 3
     </a>

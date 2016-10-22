@@ -15,38 +15,44 @@
 # limitations under the License.
 #
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 from app_utils import Ut
 
 # Block to hash user information
 
 def users_key(group = 'default'):
-    return db.Key.from_path('users', group)
+    return ndb.Key('users', group)
 
-class User(db.Model):
+class User(ndb.Model):
     #def __init__(self, *a, **kw):
-    name = db.StringProperty(required = True)
-    pw_hash = db.StringProperty(required = True)
-    email = db.StringProperty()
+    name = ndb.StringProperty(required = True)
+    pw_hash = ndb.StringProperty(required = True)
+    email = ndb.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
-        return User.get_by_id(uid, parent = users_key())
+        #print("User.by_id: "+str(uid))
+        u = cls.get_by_id(int(uid),parent=users_key())
+        return u
 
     @classmethod
     def by_name(cls, name):
-        u = User.all().filter('name =', name).get()
+        u = User.query(User.name == name).fetch()
         return u
 
     @classmethod
     def register(cls, name, pw, email = None):
-        ut = Ut()
-        pw_hash = ut.make_pw_hash(name, pw)
-        return User(parent = users_key(),
+        u = cls.by_name(name)
+        if not u:
+            ut = Ut()
+            pw_hash = ut.make_pw_hash(name, pw)
+            return User(parent = users_key(),
                     name = name,
                     pw_hash = pw_hash,
                     email = email)
+        else:
+            return False
 
     @classmethod
     def login(cls, name, pw):

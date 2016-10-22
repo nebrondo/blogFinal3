@@ -2,4 +2,16 @@
 
 {% block content %}
   {{post.render() | safe}}
+  <h3>Add a Comment: </h3>
+  <form method="post" action="/newcomment/{{post.key.id()}}">
+    <textarea class="comment" name="comment"></textarea>
+    <input type="submit">
+  </form>
+  <h2>Comments:</h2>
+  {% for c in comments %}
+    {{ c.render() | safe }}
+    <br><br>
+  {% endfor %}
+
+
 {% endblock %}

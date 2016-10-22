@@ -1,21 +1,22 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
-  <head>
-    <title>Unit 4 - Homework</title>
-    <link rel="stylesheet" type="text/css" href="css/styles.css">
-  </head>
-
-  <body>
+{% block content %}
     <h2>User Registration:</h2>
+    <label class="error">{{params.duplicateWarning}}</label>
+      <label class="error">{{params.notFoundWarning}}</label>
     <form method="post">
-      <label for="username">Username:</label><input type="text" name="username" value="{{user}}"><label class="error">{{userWarning}}</label>
-      <label for="password">Password:</label><input type="password" name="password"><label class="error">{{passWarning}}</label>
-      <label for="verify">Verify Password:</label><input type="password" name="verify"><label class="error">{{c_passWarning}}</label>
-      <label for="email">Email:</label><input type="text" name="email" value="{{email}}">
+      <label for="username">Username:</label>
+      <input type="text" name="username" value="{{user}}">
+      <label class="error">{{params.userWarning}}</label>
+      <label for="password">Password:</label><input type="password" name="password">
+      <label class="error">{{params.passWarning}}</label>
+      <label for="verify">Verify Password:</label>
+      <input type="password" name="verify">
+      <label class="error">{{params.c_passWarning}}</label>
+      <label for="email">Email:</label>
+      <input type="text" name="email" value="{{email}}">
+      <label class="error">{{params.emailWarning}}</label>
       <br>
       <input type="submit">
     </form>
-  </body>
-
-</html>
+{% endblock %}

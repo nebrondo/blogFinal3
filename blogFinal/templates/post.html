@@ -1,9 +1,7 @@
 <div class="post">
   <div class="post-heading">
-    Key: {{p.key().id()}}
     <div class="post-title">
-
-      <a href=""></a>{{p.subject}}
+      <a href="/blog/{{p.key.id()}}">{{p.subject}}</a>
     </div>
     <div class="post-user">
       Created by: {{p.user}}
@@ -19,5 +17,6 @@
   <div class="post-likes">
     Number of likes: {{p.likes}}
   </div>
-  <div><a href="/editpost/{{p.key().id()}}">Edit Post</a><a href="/like/{{p.key().id()}}">Like</a><a href="/delete/{{p.key().id()}}">Delete Post</a></div>
+  <br><br>
+  <div><a href="/editpost/{{p.key.id()}}">Edit Post</a><a href="/like/{{p.key.id()}}">Like</a><a href="/delete/{{p.key.id()}}">Delete Post</a></div>
 </div>
