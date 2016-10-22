@@ -1,4 +1,4 @@
-<div class="comments">
+<div class="post">
    <div class="post-heading">
     <div class="post-user">
       Created by: {{c.user}}
@@ -11,5 +11,5 @@
   <div class="post-content">
     {{c.content}}
   </div>
-  <div><a href="/editcomment/{{c.key.id()}}">Edit</a><a href="/deletecomment/{{c.key.id()}}">Delete</a></div>
+  <div class="post-links"><a href="/editcomment/{{c.key.id()}}">Edit</a><a href="/deletecomment/{{c.key.id()}}">Delete</a></div>
 </div>

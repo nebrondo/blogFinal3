@@ -38,8 +38,11 @@ class User(ndb.Model):
 
     @classmethod
     def by_name(cls, name):
-        u = User.query(User.name == name).fetch()
+        u = cls.query().filter(User.name == name).get()
         return u
+
+        # u = User.query(User.name == name).fetch()
+        # return u
 
     @classmethod
     def register(cls, name, pw, email = None):
@@ -58,6 +61,7 @@ class User(ndb.Model):
     def login(cls, name, pw):
         ut = Ut();
         u = cls.by_name(name)
+        print("Login: %s" % name)
         if u and ut.valid_pw(name, pw, u.pw_hash):
             return u
 

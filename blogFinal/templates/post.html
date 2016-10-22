@@ -4,7 +4,7 @@
       <a href="/blog/{{p.key.id()}}">{{p.subject}}</a>
     </div>
     <div class="post-user">
-      Created by: {{p.user}}
+      Created by: <b>{{p.user}}</b>
     </div>
     <div class="post-date">
       {{p.created.strftime("%b %d, %Y")}}
@@ -17,6 +17,7 @@
   <div class="post-likes">
     Number of likes: {{p.likes}}
   </div>
-  <br><br>
-  <div><a href="/editpost/{{p.key.id()}}">Edit Post</a><a href="/like/{{p.key.id()}}">Like</a><a href="/delete/{{p.key.id()}}">Delete Post</a></div>
+  <div class="post-links">
+    <a href="/editpost/{{p.key.id()}}">Edit Post</a><a href="/like/{{p.key.id()}}">Like</a><a href="/delete/{{p.key.id()}}">Delete Post</a>
+  </div>
 </div>
