@@ -36,6 +36,7 @@ def render_str(template, **params):
 
 
 class TemplateHandler(webapp2.RequestHandler):
+
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
     def render_str(self, template, **params):
@@ -62,12 +63,6 @@ class TemplateHandler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
-    def check_session(self):
-        loggedIn = False
-        user = self.read_secure_cookie("user_id")
-        if user:
-            loggedIn = True
-        return loggedIn
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
@@ -76,6 +71,12 @@ class TemplateHandler(webapp2.RequestHandler):
 
 def blog_key(name = 'default'):
     return ndb.Key('blogs', name)
+
+def check_session():
+    user = self.read_secure_cookie("user_id")
+    if user:
+        loggedIn = True
+    return loggedIn
 
 class Post(ndb.Model):
     subject = ndb.StringProperty(required = True)
@@ -97,18 +98,18 @@ class Comment(ndb.Model):
     user = ndb.TextProperty(required = False)
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("comment.html", c = self)
+        return render_str("comment.html", c = self,loggedIn=self.check_session())
     #def add(self):
 
 class MainHandler(TemplateHandler):
-    def render_front(self,error="",loggedIn=False):
+    def render_front(self,error=""):
         q = Post.query()
         #q = q.order(Post.created)
 
         posts = q.fetch(50)
         if not posts:
             posts = Empty
-
+        print("cm: %s" % type(super).__name__)
         self.render("index.html",posts=posts,loggedIn=self.check_session(),error=error)
     def get(self,error=""):
         #self.response.headers['Content-Type'] = 'text/plain'
@@ -119,7 +120,7 @@ class MainHandler(TemplateHandler):
 class SignupHandler(TemplateHandler):
     def get(self):
         #self.response.headers['Content-Type'] = 'text/plain'
-        self.render("signup.html",params=None)
+        self.render("signup.html",params=None,loggedIn=self.check_session())
         #self.response.out.write(form)
     def post(self):
 
@@ -161,7 +162,7 @@ class SignupHandler(TemplateHandler):
                     params['notFoundWarning']='User account not found'
                     have_error=True
         if have_error:
-            self.render('signup.html',params=params)
+            self.render('signup.html',params=params,loggedIn=self.check_session())
 
     def done(self, *a, **kw):
         raise NotImplementedError
@@ -172,7 +173,7 @@ class Register(SignupHandler):
         u = User.by_name(self.username)
         if u:
             msg = 'That user already exists.'
-            self.render('signup.html', error_username = msg)
+            self.render('signup.html', error_username = msg,loggedIn=self.check_session())
         else:
             u = User.register(self.username, self.password, self.email)
             if u != False:
@@ -181,13 +182,13 @@ class Register(SignupHandler):
                 self.redirect('/')
             else:
                 self.params['error_duplicate']
-                self.render('signup.html',params)
+                self.render('signup.html',params,loggedIn=self.check_session())
 
 class NewPostHandler(TemplateHandler):
     def render_newpost(self, subject="",content="",error=""):
         #arts = db.GqlQuery("select * from Blog "
         #                    "order by created DESC")
-        self.render("newpost.html",subject=subject,content=content,error=error)
+        self.render("newpost.html",subject=subject,content=content,error=error,loggedIn=self.check_session())
     def get(self):
         subject = self.request.get("subject")
         content = self.request.get("content")
@@ -197,7 +198,7 @@ class NewPostHandler(TemplateHandler):
         if subject or content or error:
             self.render_newpost(subject=subject,content=content,error=error)
         else:
-            self.render("newpost.html")
+            self.render("newpost.html",loggedIn=self.check_session())
         #self.response.out.write(form)
     def post(self):
         subject = self.request.get("subject")
@@ -237,13 +238,10 @@ class PostPage(TemplateHandler):
         # for c in comments:
         #     print(c.content)
 
-        if not post:
-            print("Post Invalid")
-        if not comments:
-            print("Comments Invalid")
+        print("cm: %s" % type(self).__name__)
 
-
-        self.render("permalink.html", post = post,comments=comments)
+        th = TemplateHandler()
+        self.render("permalink.html", post=post,comments=comments,loggedIn=th.loggedIn)
 
 class EditPostHandler(TemplateHandler):
     def get(self,post_id):
@@ -301,7 +299,7 @@ class LikePostHandler(TemplateHandler):
         post = key.get()
         user = self.read_secure_cookie("user_id")
         if user:
-            u=User.by_name(user)
+            u=User.by_id(user)
 
         if not user:
             self.response.write("Please log-in...")
@@ -321,7 +319,7 @@ class NewCommentHandler(TemplateHandler):
     def render_newpost(self, subject="",content="",error=""):
         #arts = db.GqlQuery("select * from Blog "
         #                    "order by created DESC")
-        self.render("newpost.html",subject=subject,content=content,error=error)
+        self.render("newpost.html",subject=subject,content=content,error=error,loggedIn=self.check_session())
     def post(self,post_id):
         content = self.request.get("comment")
         user = self.read_secure_cookie("user_id")
@@ -357,14 +355,14 @@ class CommentPostHandler(TemplateHandler):
             error = "Please add content into the comment field!!!"
             self.response.write(error)
 class EditCommentHandler(TemplateHandler):
-    def get(self,post_id,comment_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
-        post = key.get()
-        print("EditComment Post ID: %s" % post_id)
-        if not post:
-            self.error(404)
-            return
-        print("Comment: %s" % comment_id)
+    def get(self,comment_id):
+        # key = ndb.Key('Post', int(post_id), parent=blog_key())
+        # post = key.get()
+        # print("EditComment Post ID: %s" % post_id)
+        # if not post:
+        #     self.error(404)
+        #     return
+        # print("Comment: %s" % comment_id)
         c_key = ndb.Key('Comment',int(comment_id))
 
         comment = c_key.get()
@@ -372,53 +370,51 @@ class EditCommentHandler(TemplateHandler):
         u=User.by_id(int(user))
         if comment.user == u.name:
             #b.get_by_id()
-            self.render("postcomment.html", c = comment)
-        elif post.user != u.name:
+            self.render("postcomment.html", c = comment,loggedIn=self.check_session())
+        elif comment.user != u.name:
             self.response.write("You can't Edit other people's posts!!")
-    def post(self,post_id):
-        print(post_id)
+    def post(self,comment_id):
+        #print(post_id)
         content = self.request.get("comment")
         user = self.read_secure_cookie("user_id")
         u=User.by_id(int(user))
 
         if content:
-            key = ndb.Key('Post', int(post_id), parent=blog_key())
-            c = Comment(post=key,content=content)
-            post = key.get()
-            post.subject = subject
-            post.content = content
-            post.put()
-            #b.get_by_id()
-            self.redirect('/blog/%s' % str(post.key.id()))
+            key = ndb.Key('Comment', int(comment_id))
+            c = key.get()
+            c.content = content
+            c.put()
+            time.sleep(0.1)
+            self.redirect('/blog/%s' % str(c.post.id()))
         else:
             error = "we need both a subject and content"
             self.render_newpost(subject,content,error)
     # ('/deletepost',DeletePostHandler),
 class DeleteCommentHandler(TemplateHandler):
-    def get(self,post_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
+    def get(self,comment_id):
+        key = ndb.Key('Comment', int(comment_id))
         #posts = Post.all(keys_only=True)
-        post = key.get()
+        c = key.get()
         user = self.read_secure_cookie("user_id")
         u=User.by_id(int(user))
 
-        if post and post.user == u.name:
+        if c and c.user == u.name:
             #db.delete(posts) #Use in case of emergency ONLY to erase all records
-            post.key.delete()
+            c.key.delete()
             time.sleep(0.1)
-            self.redirect('/')
-        elif post.user != u.name:
+            self.redirect('/blog/%s' % str(c.post.id()))
+        elif c.user != u.name:
             self.response.write("You can't delete other people's posts!!")
     # ('/likepost',LikePostHandler),
 class WelcomeHandler(TemplateHandler):
     def get(self):
         username=self.request.cookies.get("user_id_w")
-        self.render("welcome.html",username=username)
+        self.render("welcome.html",username=username,loggedIn=self.check_session())
 
 class LoginHandler(TemplateHandler):
     def get(self):
         user_id_l=self.request.cookies.get("user_id_l")
-        self.render("login.html",username=user_id_l)
+        self.render("login.html",username=user_id,loggedIn=self.check_session())
     def post(self):
         # user_id_l=self.request.cookies.get("user_id_l")
         # pass_c=self.request.cookies.get("pass")
@@ -431,7 +427,7 @@ class LoginHandler(TemplateHandler):
             self.redirect("/")
         else:
             msg = "Invalid login"
-            self.render("login.html",error=msg)
+            self.render("login.html",error=msg,loggedIn=self.check_session())
 
 class LogoutHandler(TemplateHandler):
     def get(self):
@@ -448,7 +444,7 @@ app = webapp2.WSGIApplication([
     ('/editpost/([0-9]+)',EditPostHandler),
     ('/delete/([0-9]+)',DeletePostHandler),
     ('/newcomment/([0-9]+)',NewCommentHandler),
-    ('/editcomment/([0-9]+)/([0-9]+)',EditCommentHandler),
+    ('/editcomment/([0-9]+)',EditCommentHandler),
     ('/deletecomment/([0-9]+)',DeleteCommentHandler),
     ('/like/([0-9]+)',LikePostHandler),
     ('/postwcomment/([0-9]+)',CommentPostHandler),
