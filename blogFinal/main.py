@@ -108,7 +108,7 @@ class MainHandler(TemplateHandler):
 
         posts = q.fetch(50)
         if not posts:
-            posts = Empty
+            posts = []
         print("cm: %s" % type(super).__name__)
         self.render("index.html",posts=posts,loggedIn=self.check_session(),error=error)
     def get(self,error=""):
@@ -188,7 +188,11 @@ class NewPostHandler(TemplateHandler):
     def render_newpost(self, subject="",content="",error=""):
         #arts = db.GqlQuery("select * from Blog "
         #                    "order by created DESC")
-        self.render("newpost.html",subject=subject,content=content,error=error,loggedIn=self.check_session())
+        if not subject:
+            self.render("newpost.html",loggedIn=self.check_session())
+            print("caquita")
+        else:
+            self.render("newpost.html",subject=subject,content=content,error=error,loggedIn=self.check_session())
     def get(self):
         subject = self.request.get("subject")
         content = self.request.get("content")
@@ -200,9 +204,10 @@ class NewPostHandler(TemplateHandler):
             if subject or content or error:
                 self.render_newpost(subject=subject,content=content,error=error)
             else:
-                self.render("newpost.html",loggedIn=self.check_session())
+                self.render_newpost("newpost.html")
         else:
             self.redirect("/login")
+
         #self.response.out.write(form)
     def post(self):
         subject = self.request.get("subject")

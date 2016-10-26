@@ -105,6 +105,15 @@ input[type=submit] {
     padding: 10px;
 }
 
+.post-cancel {
+    padding: 2px;
+    background-color: white;
+    border-style: double;
+    border-width: thin;
+    border-color: grey;
+    border-style: dotted;
+}
+
 .post-heading {
     position: relative;
 }

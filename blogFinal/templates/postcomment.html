@@ -4,6 +4,6 @@
 <h3>Add a Comment: </h3>
   <form method="post" action="/editcomment/{{c.key.id()}}">
     <textarea class="comment" name="comment">{{c.content}}</textarea>
-    <input type="submit">
+    <input type="submit"><a class="post-cancel" href="/blog/{{c.post.id()}}"> Cancel </a>
   </form>
 {% endblock %}
