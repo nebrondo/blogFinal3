@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
   {{post.render() | safe}}
   <h3>Add a Comment: </h3>
@@ -12,6 +11,4 @@
     {{ c.render() | safe }}
     <br><br>
   {% endfor %}
-
-
 {% endblock %}

@@ -24,7 +24,7 @@ from google.appengine.ext import ndb
 from app_utils import Ut
 from user import User
 import time
-
+config = {'error':''}
 template_dir = os.path.join(os.path.dirname(__file__),"templates")
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                 autoescape = True)
@@ -99,6 +99,14 @@ class Comment(ndb.Model):
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("comment.html", c = self)
+    #def add(self):
+
+class Like(ndb.Model):
+    post = ndb.KeyProperty()
+    user = ndb.TextProperty(required = True,indexed = True)
+    # def render(self):
+    #     self._render_text = self.content.replace('\n', '<br>')
+    #     return render_str("comment.html", c = self)
     #def add(self):
 
 class MainHandler(TemplateHandler):
@@ -190,7 +198,6 @@ class NewPostHandler(TemplateHandler):
         #                    "order by created DESC")
         if not subject:
             self.render("newpost.html",loggedIn=self.check_session())
-            print("caquita")
         else:
             self.render("newpost.html",subject=subject,content=content,error=error,loggedIn=self.check_session())
     def get(self):
@@ -201,10 +208,10 @@ class NewPostHandler(TemplateHandler):
             error = self.request.get("error")
             #self.response.headers['Content-Type'] = 'text/plain'
             #textarea = self.request.get("text")
-            if subject or content or error:
+            if subject and content:
                 self.render_newpost(subject=subject,content=content,error=error)
             else:
-                self.render_newpost("newpost.html")
+                self.render_newpost()
         else:
             self.redirect("/login")
 
@@ -213,15 +220,20 @@ class NewPostHandler(TemplateHandler):
         subject = self.request.get("subject")
         content = self.request.get("content")
         user = self.read_secure_cookie("user_id")
+
         if user:
             us = User()
             u=us.by_id(int(user))
-
+            print("user: " + user)
             if content and subject and u:
                 p = Post(parent = blog_key(), subject = subject, content = content,likes=0,user=u.name)
                 p.put()
                 #b.get_by_id()
                 self.redirect('/blog/%s' % str(p.key.id()))
+            elif not u:
+                error = "Invalid user, please login/register and try again"
+                self.logout()
+                self.redirect("/login")
             else:
                 error = "we need both a subject and content"
                 self.render_newpost(subject,content,error)
@@ -325,15 +337,23 @@ class LikePostHandler(TemplateHandler):
         user = self.read_secure_cookie("user_id")
         if user:
             u=User.by_id(user)
-
-        if not user:
+            likes = len(Like.query(Like.post==post.key,Like.user==user).fetch())
+            print("Likes: "+str(likes))
+        else:
             self.redirect("/login")
-        elif post and post.user != u.name:
-            if post.likes:
+
+        if post and post.user != u.name:
+            if likes == 0:
+                l = Like(post=post.key,user=user)
+                l.put()
+                print("Post Likes: "+ str(post.likes))
                 post.likes += 1
-            else:
-                post.likes = 1
-            post.put()
+                post.put()
+            # if post.likes:
+            #     post.likes += 1
+            # else:
+            #     post.likes = 1
+
             self.redirect('/blog/%s' % post_id)
         elif post.user == u.name:
             self.response.write("You can't like you own posts!!")
@@ -449,7 +469,7 @@ class WelcomeHandler(TemplateHandler):
 class LoginHandler(TemplateHandler):
     def get(self,error=""):
         user=self.request.cookies.get("user_id")
-        if not user and error:
+        if not user and self.app.config.get('error'):
             self.render("login.html",error=error)
         else:
             self.render("login.html",username=user,loggedIn=self.check_session(),error=error)
@@ -487,4 +507,4 @@ app = webapp2.WSGIApplication([
     ('/like/([0-9]+)',LikePostHandler),
     ('/postwcomment/([0-9]+)',CommentPostHandler),
     ('/logout',LogoutHandler)
-], debug=True)
+], config=config,debug=True)
