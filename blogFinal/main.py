@@ -45,18 +45,14 @@ class SessionHandler(webapp2.RequestHandler):
         self.response.headers.add_header(
             'Set-Cookie',
             '%s=%s; Path=/' % (name, cookie_val))
-
     def read_secure_cookie(self, name):
         ut = Ut();
         cookie_val = self.request.cookies.get(name)
         return cookie_val and ut.check_secure_val(cookie_val)
-
     def login(self, user):
         self.set_secure_cookie('user_id', str(user.key.id()))
-
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
-
     def check_session(self):
         user = self.read_secure_cookie("user_id")
         if user:
@@ -124,6 +120,11 @@ class Like(ndb.Model):
     user = ndb.TextProperty(required = True,indexed = True)
 
 class MainHandler(TemplateHandler):
+    """Class that handles the landing page, displaying a list of blog posts
+
+    Methods:
+        render_front: queries for existing posts and sends it to index.html template
+    """
     def render_front(self,error=""):
         q = Post.query()
         posts = q.fetch(50)
@@ -134,30 +135,34 @@ class MainHandler(TemplateHandler):
         self.render_front(error)
 
 class SignupHandler(TemplateHandler):
+    """Class that handles user signup
+
+    Methods:
+        get: renders the signup template with the check for the session cookie
+        post: will collect user information from the request object and will
+              store that into the User model. It will validate for valid data
+              and will send error messages if the values are empty or invalid
+    """
     def get(self):
         self.render("signup.html",params=None,loggedIn=self.check_session())
     def post(self):
-
         have_error = False
         self.username = self.request.get('username')
         self.password = self.request.get('password')
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
-
         params = dict(username = self.username,
                       email = self.email)
         ut = Ut();
         if not ut.valid_username(self.username):
             params['userWarning'] = "That's not a valid username."
             have_error = True
-
         if not ut.valid_password(self.password):
             params['passWarning'] = "That wasn't a valid password."
             have_error = True
         elif self.password != self.verify:
             params['c_passWarning'] = "Your passwords didn't match."
             have_error = True
-
         if not ut.valid_email(self.email):
             params['emailWarning'] = "That's not a valid email."
             have_error = True
@@ -177,11 +182,19 @@ class SignupHandler(TemplateHandler):
                     have_error=True
         if have_error:
             self.render('signup.html',params=params,loggedIn=self.check_session())
-
     def done(self, *a, **kw):
         raise NotImplementedError
 
 class NewPostHandler(TemplateHandler):
+    """Class that handles new posts
+
+    Methods:
+        get: will grab subject and content in case there was an error in order
+             to fix the error and having the previous entered values available
+        post: will collect user information from the request object and will
+              store that into the User model. It will validate for valid data
+              and will send error messages if the values are empty or invalid
+    """
     def render_newpost(self, subject="",content="",error=""):
         if not subject:
             self.render("newpost.html",loggedIn=self.check_session())
@@ -203,7 +216,6 @@ class NewPostHandler(TemplateHandler):
         subject = self.request.get("subject")
         content = self.request.get("content")
         user = self.read_secure_cookie("user_id")
-
         if user:
             us = User()
             u=us.by_id(int(user))
@@ -222,7 +234,11 @@ class NewPostHandler(TemplateHandler):
             self.redirect("/login")
 
 class PostPage(TemplateHandler):
+    """Class that handles the post pages as individual links by post ID
 
+    Methods:
+        get: method that will find the post by ID as well as comments
+    """
     def get(self, post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
@@ -235,10 +251,16 @@ class PostPage(TemplateHandler):
         loggedIn=False
         if user:
             loggedIn= True
-
         self.render("permalink.html", post=post,comments=comments,loggedIn=self.check_session())
 
 class EditPostHandler(TemplateHandler):
+    """Class that handles post edition by user id
+
+    Methods:
+        get: This method will handle the edit post permissions by user id
+        post: If a user is validated as owner of a post will grab the info and
+              post into the datastore
+    """
     def get(self,post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
@@ -270,13 +292,18 @@ class EditPostHandler(TemplateHandler):
             self.render("editpost.html",post=post,error=error)
 
 class DeletePostHandler(TemplateHandler):
+    """Class takes care of deleting a post for logged in user
+
+    Methods:
+        get: the method will validate user ownership and will delete the post
+             and rederect to the post list page
+    """
     def get(self,post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
         user = self.read_secure_cookie("user_id")
         if user:
             u=User.by_id(int(user))
-
             if post and post.user == u.name:
                 #db.delete(posts) #Use in case of emergency ONLY to erase all records
                 post.key.delete()
@@ -288,6 +315,13 @@ class DeletePostHandler(TemplateHandler):
             self.redirect("/login")
 
 class LikePostHandler(TemplateHandler):
+    """Class handling one like per user, preventing liking own posts
+
+    Methods:
+        get: like a post for a particular post id, validate the current user
+             in order to prevent liking own posts. It will only allow for one
+             like per user.
+    """
     def get(self,post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
@@ -308,6 +342,12 @@ class LikePostHandler(TemplateHandler):
             self.response.write("You can't like you own posts!!")
 
 class NewCommentHandler(TemplateHandler):
+    """Class takes care of new comments on an existing post
+
+    Methods:
+        post: will send comment into the datastore and associate it to a post
+              as parent model. It will then redirect back to the post page
+    """
     def render_newpost(self, subject="",content="",error=""):
         self.render("newpost.html",subject=subject,content=content,error=error,loggedIn=self.check_session())
     def post(self,post_id):
@@ -328,6 +368,15 @@ class NewCommentHandler(TemplateHandler):
             self.redirect("/login")
 
 class EditCommentHandler(TemplateHandler):
+    """Class to enable editting comments to the its owner
+
+    Methods:
+        get: will handle the validation of ownership in order to load the edit
+             page
+        post: method to handle the posting into the datastore associating it
+              with the post and the user. When done it will redirect to the
+              associated post page.
+    """
     def get(self,comment_id):
         c_key = ndb.Key('Comment',int(comment_id))
         comment = c_key.get()
@@ -344,7 +393,6 @@ class EditCommentHandler(TemplateHandler):
         content = self.request.get("comment")
         user = self.read_secure_cookie("user_id")
         u=User.by_id(int(user))
-
         if content:
             key = ndb.Key('Comment', int(comment_id))
             c = key.get()
@@ -357,13 +405,18 @@ class EditCommentHandler(TemplateHandler):
             self.render_newpost(subject,content,error)
 
 class DeleteCommentHandler(TemplateHandler):
+    """Class takes care of deleting a comment for its owner only
+
+    Methods:
+        get: validates current user and proceeds with deleteing if it matches
+             the user logged in.
+    """
     def get(self,comment_id):
         key = ndb.Key('Comment', int(comment_id))
         c = key.get()
         user = self.read_secure_cookie("user_id")
         if user:
             u=User.by_id(int(user))
-
             if c and c.user == u.name:
                 c.key.delete()
                 time.sleep(0.1)
@@ -379,6 +432,14 @@ class WelcomeHandler(TemplateHandler):
         self.render("welcome.html",username=username,loggedIn=self.check_session())
 
 class LoginHandler(TemplateHandler):
+    """Class dealing with starting a user session
+
+    Methods:
+        get:  loads the login page and validates if the user is not logged in
+              already
+        post: validates the user in the datastore and redirects to the main
+              page
+    """
     def get(self,error=""):
         user=self.request.cookies.get("user_id")
         if not user and self.app.config.get('error'):
