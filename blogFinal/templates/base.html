@@ -10,7 +10,7 @@
     <div class="navbar"><a href="/">Home</a><a href="/newpost">New Post</a>
 
     {% if loggedIn %}
-        Welcome! (<a href="/logout">Log Out</a>)</div>
+        Welcome {{loggedIn}}! (<a href="/logout">Log Out</a>)</div>
     {% else %}
         <a href="/login">Log In</a></div>
     {% endif %}

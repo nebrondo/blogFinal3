@@ -56,7 +56,9 @@ class SessionHandler(webapp2.RequestHandler):
     def check_session(self):
         user = self.read_secure_cookie("user_id")
         if user:
-            return True
+            us = User()
+            u=us.by_id(int(user))
+            return u.name
         else:
             return False
     def initialize(self, *a, **kw):
@@ -442,7 +444,7 @@ class LoginHandler(TemplateHandler):
     """
     def get(self,error=""):
         user=self.request.cookies.get("user_id")
-        if not user and self.app.config.get('error'):
+        if not user:
             self.render("login.html",error=error)
         else:
             self.render("login.html",username=user,loggedIn=self.check_session(),error=error)
