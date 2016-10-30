@@ -282,16 +282,26 @@ class EditPostHandler(TemplateHandler):
     def post(self,post_id):
         subject = self.request.get("subject")
         content = self.request.get("content")
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
-        post = key.get()
-        if content and subject:
-            post.subject = subject
-            post.content = content
-            post.put()
-            self.redirect('/blog/%s' % str(post.key.id()))
-        else:
-            error = "we need both a subject and content"
-            self.render("editpost.html",post=post,error=error)
+
+        user = self.read_secure_cookie("user_id")
+        if user:
+            us = User()
+            u=us.by_id(int(user))
+
+            if content and subject and u:
+                key = ndb.Key('Post', int(post_id), parent=blog_key())
+                post = key.get()
+                post.subject = subject
+                post.content = content
+                post.put()
+                self.redirect('/blog/%s' % str(post.key.id()))
+            elif not u:
+                error = "Invalid user, please login/register and try again"
+                self.logout()
+                self.redirect("/login")
+            else:
+                error = "we need both a subject and content"
+                self.render("editpost.html",post=post,error=error)
 
 class DeletePostHandler(TemplateHandler):
     """Class takes care of deleting a post for logged in user
