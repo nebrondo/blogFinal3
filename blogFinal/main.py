@@ -340,18 +340,19 @@ class LikePostHandler(TemplateHandler):
         user = self.read_secure_cookie("user_id")
         if user:
             u=User.by_id(user)
-            likes = len(Like.query(Like.post==post.key,Like.user==user).fetch())
+            if post and post.user != u.name:
+                likes = len(Like.query(Like.post==post.key,Like.user==user).fetch())
+                if likes == 0:
+                        l = Like(post=post.key,user=user)
+                        l.put()
+                        post.likes += 1
+                        post.put()
+                    self.redirect('/blog/%s' % post_id)
+            elif post.user == u.name:
+                    self.response.write("You can't like you own posts!!")
         else:
             self.redirect("/login")
-        if post and post.user != u.name:
-            if likes == 0:
-                l = Like(post=post.key,user=user)
-                l.put()
-                post.likes += 1
-                post.put()
-            self.redirect('/blog/%s' % post_id)
-        elif post.user == u.name:
-            self.response.write("You can't like you own posts!!")
+
 
 class NewCommentHandler(TemplateHandler):
     """Class takes care of new comments on an existing post
