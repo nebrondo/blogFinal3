@@ -11,3 +11,4 @@ STEPS TO RUN THE PROJECT:
 4. Navigate to the directory where the project was extracted
 5. Start the application
 6. Click on browse the app
+7. Additionally the app is available at https://blogfinal3.appspot.com/
