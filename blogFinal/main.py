@@ -289,12 +289,16 @@ class EditPostHandler(TemplateHandler):
             u=us.by_id(int(user))
 
             if content and subject and u:
+
                 key = ndb.Key('Post', int(post_id), parent=blog_key())
                 post = key.get()
-                post.subject = subject
-                post.content = content
-                post.put()
-                self.redirect('/blog/%s' % str(post.key.id()))
+                if post.user == u.name:
+                    post.subject = subject
+                    post.content = content
+                    post.put()
+                    self.redirect('/blog/%s' % str(post.key.id()))
+                else:
+                    self.response.write("You can't Edit other people's posts!!")
             elif not u:
                 error = "Invalid user, please login/register and try again"
                 self.logout()
@@ -394,12 +398,14 @@ class EditCommentHandler(TemplateHandler):
         c_key = ndb.Key('Comment',int(comment_id))
         comment = c_key.get()
         user = self.read_secure_cookie("user_id")
-        if user:
+        if user and comment:
             u=User.by_id(int(user))
             if comment.user == u.name:
                 self.render("postcomment.html", c = comment,loggedIn=self.check_session())
             elif comment.user != u.name:
                 self.response.write("You can't Edit other people's posts!!")
+        elif not comment:
+            self.response.write("Could not retrieve comment")
         else:
             self.redirect("/login")
     def post(self,comment_id):
@@ -409,10 +415,13 @@ class EditCommentHandler(TemplateHandler):
         if content:
             key = ndb.Key('Comment', int(comment_id))
             c = key.get()
-            c.content = content
-            c.put()
-            time.sleep(0.1)
-            self.redirect('/blog/%s' % str(c.post.id()))
+            if comment and c.user == u.name:
+                c.content = content
+                c.put()
+                time.sleep(0.1)
+                self.redirect('/blog/%s' % str(c.post.id()))
+            else:
+                self.response.write("Could not retrieve comment")
         else:
             error = "we need both a subject and content"
             self.render_newpost(subject,content,error)
