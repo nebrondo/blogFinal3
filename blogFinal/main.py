@@ -343,13 +343,13 @@ class LikePostHandler(TemplateHandler):
             if post and post.user != u.name:
                 likes = len(Like.query(Like.post==post.key,Like.user==user).fetch())
                 if likes == 0:
-                        l = Like(post=post.key,user=user)
-                        l.put()
-                        post.likes += 1
-                        post.put()
+                    l = Like(post=post.key,user=user)
+                    l.put()
+                    post.likes += 1
+                    post.put()
                     self.redirect('/blog/%s' % post_id)
             elif post.user == u.name:
-                    self.response.write("You can't like you own posts!!")
+                self.response.write("You can't like you own posts!!")
         else:
             self.redirect("/login")
 
