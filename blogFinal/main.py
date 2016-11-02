@@ -415,18 +415,23 @@ class NewCommentHandler(TemplateHandler):
         post = key.get()
         content = self.request.get("comment")
         user = self.read_secure_cookie("user_id")
-        if user and post:
-            u = User.by_id(int(user))
-            if content:
-                c = Comment(post=key, content=content, user=u.name)
-                c.put()
-                time.sleep(0.1)
-                self.redirect('/blog/%s' % str(post_id))
+        if post:
+            if user:
+                u = User.by_id(int(user))
+                if content:
+                    c = Comment(post=key, content=content, user=u.name)
+                    c.put()
+                    time.sleep(0.1)
+                    self.redirect('/blog/%s' % str(post_id))
+                else:
+                    error = "Please add content into the comment field!!!"
+                    self.response.write(error)
             else:
-                error = "Please add content into the comment field!!!"
-                self.response.write(error)
+                self.redirect("/login")
         else:
-            self.redirect("/login")
+            self.response.write("Post does not exist!")
+            self.redirect("/")
+
 
 
 class EditCommentHandler(TemplateHandler):
