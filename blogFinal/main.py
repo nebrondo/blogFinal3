@@ -132,7 +132,8 @@ class MainHandler(TemplateHandler):
         posts = q.fetch(50)
         if not posts:
             posts = []
-        self.render("index.html",posts=posts,loggedIn=self.check_session(),error=error)
+        self.render("index.html",posts=posts,loggedIn=self.check_session()
+                    ,error=error)
     def get(self,error=""):
         self.render_front(error)
 
@@ -222,7 +223,8 @@ class NewPostHandler(TemplateHandler):
             us = User()
             u=us.by_id(int(user))
             if content and subject and u:
-                p = Post(parent = blog_key(), subject = subject, content = content,likes=0,user=u.name)
+                p = Post(parent=blog_key(), subject=subject, content=content,
+                         likes=0,user=u.name)
                 p.put()
                 self.redirect('/blog/%s' % str(p.key.id()))
             elif not u:
@@ -253,7 +255,8 @@ class PostPage(TemplateHandler):
         loggedIn=False
         if user:
             loggedIn= True
-        self.render("permalink.html", post=post,comments=comments,loggedIn=self.check_session())
+        self.render("permalink.html", post=post,comments=comments,
+                    loggedIn=self.check_session())
 
 class EditPostHandler(TemplateHandler):
     """Class that handles post edition by user id
@@ -274,7 +277,8 @@ class EditPostHandler(TemplateHandler):
             us=User()
             u=us.by_id(int(user))
             if post.user == u.name:
-                self.render("editpost.html", post = post,loggedIn=self.check_session())
+                self.render("editpost.html", post = post,
+                            loggedIn=self.check_session())
             elif post.user != u.name:
                 self.response.write("You can't Edit other people's posts!!")
         else:
@@ -321,7 +325,7 @@ class DeletePostHandler(TemplateHandler):
         if user:
             u=User.by_id(int(user))
             if post and post.user == u.name:
-                #db.delete(posts) #Use in case of emergency ONLY to erase all records
+                # db.delete(posts) #Use in case of emergency ONLY to erase all records
                 post.key.delete()
                 time.sleep(0.1)
                 self.redirect('/')
@@ -345,7 +349,8 @@ class LikePostHandler(TemplateHandler):
         if user:
             u=User.by_id(user)
             if post and post.user != u.name:
-                likes = len(Like.query(Like.post==post.key,Like.user==user).fetch())
+                likes = len(Like.query(
+                                Like.post==post.key,Like.user==user).fetch())
                 if likes == 0:
                     l = Like(post=post.key,user=user)
                     l.put()
@@ -366,7 +371,8 @@ class NewCommentHandler(TemplateHandler):
               as parent model. It will then redirect back to the post page
     """
     def render_newpost(self, subject="",content="",error=""):
-        self.render("newpost.html",subject=subject,content=content,error=error,loggedIn=self.check_session())
+        self.render("newpost.html",subject=subject,content=content,error=error,
+                    loggedIn=self.check_session())
     def post(self,post_id):
         content = self.request.get("comment")
         user = self.read_secure_cookie("user_id")
@@ -401,7 +407,8 @@ class EditCommentHandler(TemplateHandler):
         if user and comment:
             u=User.by_id(int(user))
             if comment.user == u.name:
-                self.render("postcomment.html", c = comment,loggedIn=self.check_session())
+                self.render("postcomment.html", c = comment,
+                            loggedIn=self.check_session())
             elif comment.user != u.name:
                 self.response.write("You can't Edit other people's posts!!")
         elif not comment:
@@ -415,7 +422,7 @@ class EditCommentHandler(TemplateHandler):
         if content:
             key = ndb.Key('Comment', int(comment_id))
             c = key.get()
-            if comment and c.user == u.name:
+            if c and c.user == u.name:
                 c.content = content
                 c.put()
                 time.sleep(0.1)
@@ -451,7 +458,8 @@ class DeleteCommentHandler(TemplateHandler):
 class WelcomeHandler(TemplateHandler):
     def get(self):
         username=self.request.cookies.get("user_id_w")
-        self.render("welcome.html",username=username,loggedIn=self.check_session())
+        self.render("welcome.html",username=username,
+                    loggedIn=self.check_session())
 
 class LoginHandler(TemplateHandler):
     """Class dealing with starting a user session
@@ -467,7 +475,8 @@ class LoginHandler(TemplateHandler):
         if not user:
             self.render("login.html",error=error)
         else:
-            self.render("login.html",username=user,loggedIn=self.check_session(),error=error)
+            self.render("login.html",username=user,loggedIn=self.check_session()
+                         ,error=error)
     def post(self):
         user = self.request.get("username")
         pwd = self.request.get("password")
