@@ -411,12 +411,13 @@ class NewCommentHandler(TemplateHandler):
                     error=error, loggedIn=self.check_session())
 
     def post(self, post_id):
+        key = ndb.Key('Post', int(post_id), parent=blog_key())
+        post = key.get()
         content = self.request.get("comment")
         user = self.read_secure_cookie("user_id")
-        if user:
+        if user and post:
             u = User.by_id(int(user))
             if content:
-                key = ndb.Key('Post', int(post_id), parent=blog_key())
                 c = Comment(post=key, content=content, user=u.name)
                 c.put()
                 time.sleep(0.1)
